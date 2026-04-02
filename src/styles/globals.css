@@ -1,0 +1,14 @@
+@import "./legacy/common.css";
+@import "./legacy/main.css";
+@import "./legacy/responsive.css";
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+}
