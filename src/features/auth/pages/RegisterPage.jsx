@@ -1,7 +1,68 @@
-import { Link } from "react-router-dom";
+import { authApi } from "@/api/auth.api";
+import { useAuthStore } from "@/store/auth.store";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 import AuthShell from "../components/AuthShell";
+import { registerSchema } from "../schemas/auth.schema";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (values) => {
+    setServerError("");
+
+    try {
+      const payload = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+      };
+
+      const res = await authApi.register(payload);
+
+      const accessToken = res?.accessToken || res?.data?.accessToken || null;
+      const refreshToken = res?.refreshToken || res?.data?.refreshToken || null;
+      const user = res?.user || res?.data?.user || null;
+
+      if (accessToken) {
+        setAuth({ user, accessToken, refreshToken });
+        navigate("/feed", { replace: true });
+        return;
+      }
+
+      navigate("/login", {
+        replace: true,
+        state: { message: "Registration successful. Please log in." },
+      });
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Registration failed";
+      setServerError(message);
+    }
+  };
+
   const leftContent = (
     <div className="col-xl-8 col-lg-8 col-md-12 col-sm-12">
       <div className="_social_registration_right">
@@ -22,9 +83,8 @@ export default function RegisterPage() {
       rightSubtitle="Get Started Now"
       rightTitle="Registration"
       rightLogoSrc="/assets/images/logo.svg"
-      rightLogoAlt="Logo"
+      rightLogoAlt="Image"
     >
-      {/* Google Register */}
       <button
         type="button"
         className="_social_registration_content_btn _mar_b40"
@@ -34,17 +94,18 @@ export default function RegisterPage() {
           alt="Image"
           className="_google_img"
         />
-        <span>Register with Google</span>
+        <span>Register with google</span>
       </button>
 
       <div className="_social_registration_content_bottom_txt _mar_b40">
         <span>Or</span>
       </div>
 
-      {/* Registration Form */}
-      <form className="_social_registration_form">
+      <form
+        className="_social_registration_form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         <div className="row">
-          {/* First Name */}
           <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
             <div className="_social_registration_form_input _mar_b14">
               <label
@@ -56,12 +117,17 @@ export default function RegisterPage() {
               <input
                 id="firstName"
                 type="text"
-                className="form-control _social_registration_input"
+                className={`form-control _social_registration_input ${errors.firstName ? "is-invalid" : ""}`}
+                {...register("firstName")}
               />
+              {errors.firstName && (
+                <small className="text-danger">
+                  {errors.firstName.message}
+                </small>
+              )}
             </div>
           </div>
 
-          {/* Last Name */}
           <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
             <div className="_social_registration_form_input _mar_b14">
               <label
@@ -73,12 +139,15 @@ export default function RegisterPage() {
               <input
                 id="lastName"
                 type="text"
-                className="form-control _social_registration_input"
+                className={`form-control _social_registration_input ${errors.lastName ? "is-invalid" : ""}`}
+                {...register("lastName")}
               />
+              {errors.lastName && (
+                <small className="text-danger">{errors.lastName.message}</small>
+              )}
             </div>
           </div>
 
-          {/* Email */}
           <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
             <div className="_social_registration_form_input _mar_b14">
               <label
@@ -90,12 +159,15 @@ export default function RegisterPage() {
               <input
                 id="registerEmail"
                 type="email"
-                className="form-control _social_registration_input"
+                className={`form-control _social_registration_input ${errors.email ? "is-invalid" : ""}`}
+                {...register("email")}
               />
+              {errors.email && (
+                <small className="text-danger">{errors.email.message}</small>
+              )}
             </div>
           </div>
 
-          {/* Password */}
           <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
             <div className="_social_registration_form_input _mar_b14">
               <label
@@ -107,13 +179,38 @@ export default function RegisterPage() {
               <input
                 id="registerPassword"
                 type="password"
-                className="form-control _social_registration_input"
+                className={`form-control _social_registration_input ${errors.password ? "is-invalid" : ""}`}
+                {...register("password")}
               />
+              {errors.password && (
+                <small className="text-danger">{errors.password.message}</small>
+              )}
+            </div>
+          </div>
+
+          <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+            <div className="_social_registration_form_input _mar_b14">
+              <label
+                className="_social_registration_label _mar_b8"
+                htmlFor="confirmPassword"
+              >
+                Repeat Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                className={`form-control _social_registration_input ${errors.confirmPassword ? "is-invalid" : ""}`}
+                {...register("confirmPassword")}
+              />
+              {errors.confirmPassword && (
+                <small className="text-danger">
+                  {errors.confirmPassword.message}
+                </small>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Terms */}
         <div className="row">
           <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
             <div className="form-check _social_registration_form_check">
@@ -134,22 +231,25 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Submit */}
+        {serverError ? (
+          <div className="mt-3 text-danger">{serverError}</div>
+        ) : null}
+
         <div className="row">
           <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
             <div className="_social_registration_form_btn _mar_t40 _mar_b60">
               <button
-                type="button"
+                type="submit"
                 className="_social_registration_form_btn_link _btn1"
+                disabled={isSubmitting}
               >
-                Register Now
+                {isSubmitting ? "Creating account..." : "Register Now"}
               </button>
             </div>
           </div>
         </div>
       </form>
 
-      {/* Bottom Link */}
       <div className="row">
         <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
           <div className="_social_registration_bottom_txt">

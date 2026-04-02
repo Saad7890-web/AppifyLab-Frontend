@@ -1,7 +1,53 @@
-import { Link } from "react-router-dom";
+import { authApi } from "@/api/auth.api";
+import { useAuthStore } from "@/store/auth.store";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 import AuthShell from "../components/AuthShell";
+import { loginSchema } from "../schemas/auth.schema";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (values) => {
+    setServerError("");
+
+    try {
+      const res = await authApi.login(values);
+
+      const accessToken =
+        res?.accessToken || res?.data?.accessToken || res?.token || null;
+      const refreshToken = res?.refreshToken || res?.data?.refreshToken || null;
+      const user = res?.user || res?.data?.user || null;
+
+      if (!accessToken) {
+        throw new Error("Login response did not include access token");
+      }
+
+      setAuth({ user, accessToken, refreshToken });
+      navigate("/feed", { replace: true });
+    } catch (error) {
+      const message =
+        error?.response?.data?.message || error?.message || "Login failed";
+      setServerError(message);
+    }
+  };
+
   const leftContent = (
     <div className="col-xl-8 col-lg-8 col-md-12 col-sm-12">
       <div className="_social_login_left">
@@ -36,7 +82,7 @@ export default function LoginPage() {
         <span>Or</span>
       </div>
 
-      <form className="_social_login_form">
+      <form className="_social_login_form" onSubmit={handleSubmit(onSubmit)}>
         <div className="row">
           <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
             <div className="_social_login_form_input _mar_b14">
@@ -49,8 +95,12 @@ export default function LoginPage() {
               <input
                 id="loginEmail"
                 type="email"
-                className="form-control _social_login_input"
+                className={`form-control _social_login_input ${errors.email ? "is-invalid" : ""}`}
+                {...register("email")}
               />
+              {errors.email && (
+                <small className="text-danger">{errors.email.message}</small>
+              )}
             </div>
           </div>
 
@@ -65,8 +115,12 @@ export default function LoginPage() {
               <input
                 id="loginPassword"
                 type="password"
-                className="form-control _social_login_input"
+                className={`form-control _social_login_input ${errors.password ? "is-invalid" : ""}`}
+                {...register("password")}
               />
+              {errors.password && (
+                <small className="text-danger">{errors.password.message}</small>
+              )}
             </div>
           </div>
         </div>
@@ -97,14 +151,19 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {serverError ? (
+          <div className="mt-3 text-danger">{serverError}</div>
+        ) : null}
+
         <div className="row">
           <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
             <div className="_social_login_form_btn _mar_t40 _mar_b60">
               <button
-                type="button"
+                type="submit"
                 className="_social_login_form_btn_link _btn1"
+                disabled={isSubmitting}
               >
-                Login now
+                {isSubmitting ? "Logging in..." : "Login now"}
               </button>
             </div>
           </div>
