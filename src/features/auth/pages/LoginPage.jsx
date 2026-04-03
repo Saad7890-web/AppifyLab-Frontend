@@ -30,10 +30,13 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(values);
 
-      const accessToken =
-        res?.accessToken || res?.data?.accessToken || res?.token || null;
-      const refreshToken = res?.refreshToken || res?.data?.refreshToken || null;
-      const user = res?.user || res?.data?.user || null;
+      console.log("LOGIN RESPONSE:", res);
+
+      const data = res?.data; // ✅ correct for your case
+
+      const accessToken = data?.accessToken;
+      const refreshToken = data?.refreshToken || null;
+      const user = data?.user;
 
       if (!accessToken) {
         throw new Error("Login response did not include access token");

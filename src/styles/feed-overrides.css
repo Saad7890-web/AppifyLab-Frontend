@@ -1,0 +1,92 @@
+._layout_main_wrapper {
+  background: var(--bg1);
+  min-height: 100vh;
+}
+
+._layout_inner_wrap {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+._feed_inner_area,
+._right_inner_area_info,
+._feed_right_inner_area_card,
+._left_inner_area_explore,
+._feed_inner_text_area,
+._feed_inner_timeline_post_area {
+  background: var(--bg2);
+}
+
+._comment_area {
+  display: flex;
+  gap: 12px;
+}
+
+._comment_image {
+  flex: 0 0 auto;
+}
+
+._comment_img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+._comment_details {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+._comment_name_title {
+  font-size: 15px;
+  margin: 0;
+  color: var(--color1);
+}
+
+._comment_status_text,
+._comment_main {
+  color: var(--color7);
+  font-size: 14px;
+}
+
+._feed_inner_timeline_reaction {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+._feed_inner_timeline_reaction .btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-weight: 500;
+  color: var(--color5);
+}
+
+._feed_inner_story_btn_link {
+  padding: 12px 28px;
+  border-radius: 6px;
+  background: var(--color5);
+  color: #fff;
+  border: 0;
+}
+
+._feed_inner_story_btn_link:hover {
+  color: #fff;
+}
+
+._feed_right_inner_area_card_form {
+  position: relative;
+}
+
+._feed_right_inner_area_card_form_svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+._feed_right_inner_area_card_form_inpt {
+  padding-left: 44px;
+}
