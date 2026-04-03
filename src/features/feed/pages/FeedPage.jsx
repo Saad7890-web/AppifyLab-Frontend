@@ -12,6 +12,9 @@ const rightPeople = [
   { name: "Mark Zuckerberg", role: "Founder of Meta" },
 ];
 
+// ✅ ADD THIS
+const FEED_THEME_KEY = "appifylab-feed-theme";
+
 export default function FeedPage() {
   const posts = useFeedStore((s) => s.posts);
   const loading = useFeedStore((s) => s.loading);
@@ -21,6 +24,21 @@ export default function FeedPage() {
   const resetFeed = useFeedStore((s) => s.resetFeed);
 
   const [search, setSearch] = useState("");
+
+  // ✅ DARK MODE STATE
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    const saved = window.localStorage.getItem(FEED_THEME_KEY);
+    if (saved) return saved === "dark";
+
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  });
+
+  // ✅ SAVE THEME
+  useEffect(() => {
+    window.localStorage.setItem(FEED_THEME_KEY, isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
 
   useEffect(() => {
     resetFeed();
@@ -36,11 +54,16 @@ export default function FeedPage() {
   }, [search]);
 
   return (
-    <div className="_layout _layout_main_wrapper">
+    <div
+      className={`_layout _layout_main_wrapper ${
+        isDarkMode ? "_dark_wrapper" : ""
+      }`}
+    >
       <div className="_main_layout">
         <div className="container _custom_container">
           <div className="_layout_inner_wrap">
             <div className="row">
+              {/* LEFT SIDEBAR */}
               <div className="col-xl-3 col-lg-3 col-md-12 col-sm-12">
                 <div className="_layout_left_sidebar_wrap">
                   <div className="_layout_left_sidebar_inner">
@@ -68,9 +91,26 @@ export default function FeedPage() {
                 </div>
               </div>
 
+              {/* MIDDLE SECTION */}
               <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
                 <div className="_layout_middle_wrap">
                   <div className="_layout_middle_inner">
+                    {/* ✅ HEADER + TOGGLE */}
+                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 px-1">
+                      <h4 className="_title5 mb-0">Feed</h4>
+
+                      <button
+                        type="button"
+                        className={`_feed_theme_toggle btn btn-sm ${
+                          isDarkMode ? "btn-light" : "btn-outline-dark"
+                        }`}
+                        onClick={() => setIsDarkMode((current) => !current)}
+                      >
+                        {isDarkMode ? "Normal mode" : "Dark mode"}
+                      </button>
+                    </div>
+
+                    {/* CREATE POST */}
                     <CreatePost />
 
                     {error ? (
@@ -104,6 +144,7 @@ export default function FeedPage() {
                 </div>
               </div>
 
+              {/* RIGHT SIDEBAR */}
               <div className="col-xl-3 col-lg-3 col-md-12 col-sm-12">
                 <div className="_layout_right_sidebar_wrap">
                   <div className="_layout_right_sidebar_inner">
@@ -197,6 +238,7 @@ export default function FeedPage() {
                   </div>
                 </div>
               </div>
+              {/* END RIGHT */}
             </div>
           </div>
         </div>

@@ -22,3 +22,62 @@
   object-fit: cover;
   border-radius: 6px;
 }
+
+._feed_theme_toggle {
+  min-width: 132px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+._feed_theme_toggle:focus-visible {
+  box-shadow: none;
+}
+
+._dark_wrapper .modal-content {
+  background: var(--bg5);
+  color: var(--bg2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+._dark_wrapper .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+._dark_wrapper .modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+._dark_wrapper .btn-close {
+  filter: invert(1) grayscale(1);
+}
+
+._feed_like_row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+._likes_badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4f8cff, #2f6fed);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(47, 111, 237, 0.25);
+  border: 2px solid #fff;
+  flex: 0 0 auto;
+}
+
+._likes_badge_count {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+._dark_wrapper ._likes_badge {
+  border-color: var(--bg5);
+}

@@ -12,6 +12,7 @@ export default function PostCard({ post }) {
   const [showLikers, setShowLikers] = useState(false);
   const [likersLoading, setLikersLoading] = useState(false);
   const [likers, setLikers] = useState([]);
+  const [isLiking, setIsLiking] = useState(false);
 
   const avatarSrc =
     getMediaUrl(post.author?.avatarUrl) ||
@@ -19,39 +20,43 @@ export default function PostCard({ post }) {
     "/assets/images/Avatar.png";
 
   const imageSrc = getMediaUrl(post.imageUrl);
-  // getMediaUrl(post.image) ||
-  // getMediaUrl(post.photo) ||
-  // getMediaUrl(post.mediaUrl) ||
-  // getMediaUrl(post.media?.url) ||
-  // null;
 
   const handleToggleLike = async () => {
-    const prevLiked = post.likedByMe;
-    const prevLikeCount = post.likeCount;
+    if (isLiking) return;
 
-    updatePost(post.id, (current) => ({
-      ...current,
-      likedByMe: !current.likedByMe,
-      likeCount: current.likedByMe
-        ? Math.max(current.likeCount - 1, 0)
-        : current.likeCount + 1,
-    }));
+    const prevLiked = Boolean(post.likedByMe);
+    const prevLikeCount = Number(post.likeCount || 0);
+
+    setIsLiking(true);
+
+    // optimistic update
+    updatePost(post.id, (current) => {
+      const likedByMe = !current.likedByMe;
+      const likeCount = likedByMe
+        ? Number(current.likeCount || 0) + 1
+        : Math.max(Number(current.likeCount || 0) - 1, 0);
+
+      return { ...current, likedByMe, likeCount };
+    });
 
     try {
       const res = await feedApi.toggleLike("post", post.id);
-      const data = res.data?.data;
+      const data = res.data?.data || {};
 
       updatePost(post.id, (current) => ({
         ...current,
-        likedByMe: data.liked,
-        likeCount: data.likeCount,
+        likedByMe: Boolean(data.liked),
+        likeCount: Number(data.likeCount ?? current.likeCount ?? 0),
       }));
     } catch {
+      // rollback
       updatePost(post.id, (current) => ({
         ...current,
         likedByMe: prevLiked,
         likeCount: prevLikeCount,
       }));
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -88,13 +93,7 @@ export default function PostCard({ post }) {
 
           <div className="_feed_inner_timeline_post_box_dropdown">
             <button type="button" className="_feed_timeline_post_dropdown_link">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="4"
-                height="17"
-                fill="none"
-                viewBox="0 0 4 17"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="4" height="17">
                 <circle cx="2" cy="2" r="2" fill="#C4C4C4" />
                 <circle cx="2" cy="8" r="2" fill="#C4C4C4" />
                 <circle cx="2" cy="15" r="2" fill="#C4C4C4" />
@@ -103,30 +102,36 @@ export default function PostCard({ post }) {
           </div>
         </div>
 
-        {post.content ? (
+        {post.content && (
           <div className="_feed_inner_timeline_post_box_para _post_text">
             {post.content}
           </div>
-        ) : null}
+        )}
 
-        {imageSrc ? (
+        {imageSrc && (
           <div className="_post_image_wrap">
             <img src={imageSrc} alt="post" className="_post_image" />
           </div>
-        ) : null}
+        )}
       </div>
 
+      {/* ✅ TOTAL REACTIONS (LIKE COUNT + COMMENTS) */}
       <div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
-        <div className="_feed_inner_timeline_total_reacts_txt d-flex justify-content-between align-items-center">
+        <div className="d-flex justify-content-between align-items-center">
           <button
             type="button"
             className="btn p-0 border-0 bg-transparent"
             onClick={openLikers}
             disabled={likersLoading}
           >
-            <span className="_feed_inner_timeline_total_reacts_para">
-              {post.likeCount || 0} likes
-            </span>
+            <div
+              className="_likes_badge"
+              aria-label={`${post.likeCount || 0} likes`}
+            >
+              <span className="_likes_badge_count">
+                {post.likeCount > 99 ? "99+" : post.likeCount || 0}
+              </span>
+            </div>
           </button>
 
           <span className="_feed_inner_timeline_total_reacts_para1">
@@ -135,13 +140,18 @@ export default function PostCard({ post }) {
         </div>
       </div>
 
+      {/* ❤️ LIKE & COMMENT BUTTONS */}
       <div className="_feed_inner_timeline_reaction _padd_r24 _padd_l24">
         <button
           type="button"
-          className="_feed_inner_timeline_reaction_emoji _feed_reaction _feed_reaction_active btn"
+          className={`_feed_inner_timeline_reaction_emoji _feed_reaction btn ${
+            post.likedByMe ? "_feed_reaction_active" : ""
+          }`}
           onClick={handleToggleLike}
+          disabled={isLiking}
+          aria-pressed={Boolean(post.likedByMe)}
         >
-          {post.likedByMe ? "Unlike" : "Like"}
+          {isLiking ? "Saving..." : post.likedByMe ? "Unlike" : "Like"}
         </button>
 
         <button
@@ -153,11 +163,11 @@ export default function PostCard({ post }) {
         </button>
       </div>
 
-      {showComments ? (
+      {showComments && (
         <div className="_feed_inner_timeline_cooment_area _padd_r24 _padd_l24 mt-3">
           <CommentSection postId={post.id} />
         </div>
-      ) : null}
+      )}
 
       <LikeUsersModal
         open={showLikers}
