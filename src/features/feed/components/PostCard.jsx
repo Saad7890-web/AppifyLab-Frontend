@@ -1,14 +1,9 @@
-import { API_BASE_URL } from "@/config/env";
+import { getMediaUrl } from "@/utils/media";
 import { useState } from "react";
 import { feedApi } from "../api/feed.api";
 import { useFeedStore } from "../store/feed.store";
 import CommentSection from "./CommentSection";
 import LikeUsersModal from "./LikeUsersModal";
-
-function buildImageSrc(url) {
-  if (!url) return null;
-  return url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
-}
 
 export default function PostCard({ post }) {
   const updatePost = useFeedStore((s) => s.updatePost);
@@ -18,17 +13,21 @@ export default function PostCard({ post }) {
   const [likersLoading, setLikersLoading] = useState(false);
   const [likers, setLikers] = useState([]);
 
-  const imageSrc = buildImageSrc(post.imageUrl);
   const avatarSrc =
-    buildImageSrc(post.author?.avatarUrl) || "/assets/images/Avatar.png";
+    getMediaUrl(post.author?.avatarUrl) ||
+    getMediaUrl(post.author?.avatar) ||
+    "/assets/images/Avatar.png";
 
-  const timeLabel = new Date(post.createdAt).toLocaleString();
+  const imageSrc = getMediaUrl(post.imageUrl);
+  // getMediaUrl(post.image) ||
+  // getMediaUrl(post.photo) ||
+  // getMediaUrl(post.mediaUrl) ||
+  // getMediaUrl(post.media?.url) ||
+  // null;
 
   const handleToggleLike = async () => {
-    const previous = {
-      likedByMe: post.likedByMe,
-      likeCount: post.likeCount,
-    };
+    const prevLiked = post.likedByMe;
+    const prevLikeCount = post.likeCount;
 
     updatePost(post.id, (current) => ({
       ...current,
@@ -50,8 +49,8 @@ export default function PostCard({ post }) {
     } catch {
       updatePost(post.id, (current) => ({
         ...current,
-        likedByMe: previous.likedByMe,
-        likeCount: previous.likeCount,
+        likedByMe: prevLiked,
+        likeCount: prevLikeCount,
       }));
     }
   };
@@ -75,12 +74,13 @@ export default function PostCard({ post }) {
             <div className="_feed_inner_timeline_post_box_image">
               <img src={avatarSrc} alt="" className="_post_img" />
             </div>
+
             <div className="_feed_inner_timeline_post_box_txt">
               <h4 className="_feed_inner_timeline_post_box_title">
                 {post.author?.firstName} {post.author?.lastName}
               </h4>
               <p className="_feed_inner_timeline_post_box_para">
-                {timeLabel} .{" "}
+                {new Date(post.createdAt).toLocaleString()} .{" "}
                 <span className="text-capitalize">{post.visibility}</span>
               </p>
             </div>
@@ -104,24 +104,19 @@ export default function PostCard({ post }) {
         </div>
 
         {post.content ? (
-          <div className="_feed_inner_timeline_post_box_para mt-3">
+          <div className="_feed_inner_timeline_post_box_para _post_text">
             {post.content}
           </div>
         ) : null}
 
         {imageSrc ? (
-          <div className="mt-3">
-            <img
-              src={imageSrc}
-              alt="post"
-              className="img-fluid rounded"
-              style={{ width: "100%", maxHeight: 520, objectFit: "cover" }}
-            />
+          <div className="_post_image_wrap">
+            <img src={imageSrc} alt="post" className="_post_image" />
           </div>
         ) : null}
       </div>
 
-      <div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26 mt-3">
+      <div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
         <div className="_feed_inner_timeline_total_reacts_txt d-flex justify-content-between align-items-center">
           <button
             type="button"
@@ -130,9 +125,10 @@ export default function PostCard({ post }) {
             disabled={likersLoading}
           >
             <span className="_feed_inner_timeline_total_reacts_para">
-              {post.likeCount} likes
+              {post.likeCount || 0} likes
             </span>
           </button>
+
           <span className="_feed_inner_timeline_total_reacts_para1">
             {post.commentCount || 0} comments
           </span>
